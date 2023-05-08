@@ -215,7 +215,7 @@ question: Please review the following amendments...
 subquestion: |
 
   % for article in articles:
-  > Article ${article.article_number} "${article.article_heading }" provision ${article.article_provision}: 
+  ### Article ${article.article_number} "${article.article_heading }" provision ${article.article_provision}: 
   
   
   % for amendment in article.amendments:
@@ -226,7 +226,8 @@ subquestion: |
   This amending order will come into effect on the date: **${ commencement_date }**.
   
   If you would like to make any changes to your selection, please press the "Back" button at the top left of the screen, to re-enter any information. 
-  
+attachments:
+  - docx template file: LDO1doc.docx
 buttons: 
   - Restart: restart
   - Exit: exit
