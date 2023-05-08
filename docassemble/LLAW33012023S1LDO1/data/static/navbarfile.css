@@ -1,0 +1,17 @@
+/* this section sets the colour of the navbar to be red like the Jersey Government's logo */ 
+.navbar{ 
+  background-color: rgb(163,27,36) !important;
+}
+/* this section sets the appearance for the 'Continue' button... */
+.btn-primary{
+  color: rgb(255,255,255);
+  background-color: rgb(89, 98, 196);
+  border-color: rgb(0,0,0);
+}
+/* ...and when hovering over the continue button, this changes the colour */
+.btn-primary:hover{
+  color: rgb(255,255,255);
+  background-color: rgba(189,70,80,0.8);
+  border-color: rgb(0,0,0);
+}
+

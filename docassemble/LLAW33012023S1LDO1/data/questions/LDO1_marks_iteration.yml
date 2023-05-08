@@ -1,0 +1,176 @@
+---
+# We use these objects to set up our data structure.  We will have:
+# - a list of articles
+# - in each article, a list of amendments; and
+# - in each amendment a list of amendment instructions
+# This is very complex and I suggest you just take this on face value
+objects:
+  - articles: DAList.using(there_are_any=True, object_type=DAObject, complete_attribute='complete')
+  - articles[i].amendments: DAList.using(there_are_any=True, object_type=DAObject, complete_attribute='complete')
+  - articles[i].amendments[j].instructions: DAList.using(there_are_any=True, object_type=DAObject, auto_gather=False)
+---
+# Mandatory code block.  No welcome screen!
+mandatory: True
+code: |
+  final_screen
+---
+#
+# Questions to ask
+#
+# This one is for the article
+question: Enter Article Details
+subquestion: |
+  Enter details about the ${ordinal(i)} article.
+fields:
+  - Article number: articles[i].article_number
+  - Article heading: articles[i].article_heading
+  - Article Provision: articles[i].article_provision
+---
+# We ask for amendments in two phases.  First ask what type
+# of amendment and then second ask for the amendment details.
+# We do this so we can construct the appropriate labels for the
+# amendment details
+question: Enter Amendment
+subquestion: |
+  Something will go here
+fields:
+  - Amendment type: articles[i].amendments[j].amendment_type
+    datatype: radio
+    choices:
+      - Add
+      - Delete
+      - Substitute
+---
+# Question block for amendment details. We need to use sets as we
+# generate the fields dynamically.  See https://docassemble.org/docs/fields.html#fields%20code.
+# I got very fancy here.  It's so I can use one question block for adding, deleting and
+# substituting even though when I delete I only need one instruction and for the others I need
+# two. A bit of overkill - sorry!
+# This question block and the two code blocks that follow it are related, so I've kept them
+# together.
+sets: articles[i].amendments[j].instructions[0].instruction
+question: Enter amendment details
+subquestion: |
+  Instructions for details go in here.  You may want to use if statements to
+  display the instructions depending on the value of articles[i].amendments[j].amendment_type
+
+  Note: using variable to label the two instruction fields
+fields:
+  code: articles[i].amendments[j].field_codes
+---
+# This code block sets the instruction labels depending on the amendment instruction
+code: |
+  # Store amendment_type here to save on typing
+  at = articles[i].amendments[j].amendment_type
+
+  # The values for at must match exactly the choices for amendment_type
+  if at == 'Add':
+    articles[i].amendments[j].instructions[0].label = 'Enter preceding words'
+    articles[i].amendments[j].instructions[1].label = 'Enter new words to add'
+  elif at == 'Delete':
+    articles[i].amendments[j].instructions[0].label = 'Enter words to delete'
+  elif at == 'Substitute':
+    articles[i].amendments[j].instructions[0].label = 'Enter words to delete'
+    articles[i].amendments[j].instructions[1].label = 'Enter susbstitution words'
+  else:
+    articles[i].amendments[j].instructions[0].label = 'ERROR: Invalid amendment_type: {}'.format(at)
+    articles[i].amendments[j].instructions[1].label = 'ERROR: Invalid amendment_type: {}'.format(at)
+
+  articles[i].amendments[j].instructions.gathered = True
+---
+# This code block constructs the fields to display for the amendment.  We do this
+# in a code block so that we can display one instruction field for a deletion and two
+# fields for an addition or substitution
+code: |
+  at = articles[i].amendments[j].amendment_type
+  
+  # We define these strings to make the code below less cluttered
+  instr0       = 'articles[i].amendments[j].instructions[0].instruction'
+  instr1       = 'articles[i].amendments[j].instructions[1].instruction'
+  instr0_label = '${articles[i].amendments[j].instructions[0].label}'
+  instr1_label = '${articles[i].amendments[j].instructions[1].label}'
+  error_label  = 'ERROR: Invalid argument type: ' + at
+  
+  if at == 'Add' or at == 'Substitute':
+    field_code = [
+      { instr0_label : instr0 },
+      { instr1_label : instr1 }]
+  elif at == 'Delete':
+    field_code = [
+      { instr0_label : instr0 }]
+  else:
+    field_code = [
+      { error_label : instr0 }]
+
+  articles[i].amendments[j].field_codes = field_code
+---
+# These next four code blocks drive the process of asking for articles and for amendments for
+# each article.  We can have many articles and each article can have many amendments.  Docassemble
+# has a feature called 'Groups' and we are making extensive use of this feature! Check out these
+# parts of the manual for more info:
+# - https://docassemble.org/docs/groups.html#list%20of%20objects
+# - https://docassemble.org/docs/groups.html#nested%20lists
+# 
+# This code block asks for the article details and then collects the amedments for that
+# article.
+# Note we only ask for the article_number.  That's because this is enough to call the question
+# block which contains the other two article_xxx variables.
+code: |
+  # Asks for the article detail and then
+  # the list of amendments and then marks
+  # this article as complete.
+  articles[i].article_number
+  articles[i].amendments.gather()
+  articles[i].complete = True
+---
+# This code block drives the collection of the amendments.  Note we ask for the type
+# first and then instruction_1.
+code: |
+  articles[i].amendments[j].amendment_type
+  articles[i].amendments[j].instructions[0].instruction
+  articles[i].amendments[j].complete = True
+---
+# Asks whether to add another article
+question: Add another article?
+yesno: articles.there_is_another
+---
+# Asks whether to add another amendment
+question: Add another amendment?
+yesno: articles[i].amendments.there_is_another
+---
+# This is the final screen.  In this example I use a two nested for loops
+# in the subquestion to generate the list of articles and the list of the amendments 
+# for each article. 
+# We use a code block (underneath this event) to display the amendments beautifully
+event: final_screen
+question: List of articles and amendments
+subquestion: |
+  
+
+  % for article in articles:
+  > ${article.article_heading }
+  Article No. ${article.article_number} Provision ${article.article_provision} 
+  
+  % for amendment in article.amendments:
+  ${amendment.amendment_string }
+  % endfor
+  % endfor
+---
+# We use a separate code block to create the amendment screen. It keeps the final_screen
+# a bit cleaner and easier to read
+code: |
+  # Variables to make the code a bit less cluttered
+  at = articles[i].amendments[j].amendment_type
+  instr0 = articles[i].amendments[j].instructions[0].instruction
+  if defined('articles[i].amendments[j].instructions[1].instruction'):
+    instr1 = articles[i].amendments[j].instructions[1].instruction
+  
+  if at == 'Add':
+    display_string = '**Add these words**: {} **after these words**: {}'.format(instr1, instr0)
+  elif at == 'Delete':
+    display_string = '**Delete these words**: {}'.format(instr0)
+  elif at == 'Substitute':
+    display_string = '**Substitute these words**: {} **with these words**: {}'.format(
+                                                                                instr0, instr1)
+  articles[i].amendments[j].amendment_string = display_string
+---

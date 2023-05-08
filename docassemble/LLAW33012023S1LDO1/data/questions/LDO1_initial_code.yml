@@ -1,0 +1,196 @@
+---
+# This block sets the title and short title of the app.
+metadata:
+  title: |
+    LDO Amending Order Tool
+  short title: |
+    Amending Orders Tool
+---
+# This block includes the Static File "navbarfile.css" in our code, which allows us to personalise the app's colours and appearance. The file can be found in the 'Static Files' folder in the docassemble playground. 
+features:
+  css: navbarfile.css
+  debug: True
+  hide standard menu: False
+---
+# This block declares The Jersey Government's logo as an object, which is required to display the logo in the navbar. This image file is in the 'Static' folder in the Playground.
+objects:
+  - JerseyLogo: DAStaticFile.using(filename='NavbarLogo.PNG')
+---
+# This block displays the aforementioned logo in the navbar.
+mandatory: True
+code: |
+  set_parts(logo='<img src="' + JerseyLogo.url_for() + '" style="height: 50px;">')
+---
+# This block displays the welcome page for the app.
+mandatory: True
+question: Welcome to the Amending Order Tool
+subquestion: |
+  [FILE AmendingOrderToolFirstLogo.PNG]
+  
+  This application is here to assist you with drafting amending orders!
+  
+  *Please take care to ensure all fields are entered with correct spelling and capitalisation, as all responses are case-sensitive.*  
+  
+  To continue, press *'Continue'*, to exit, press *'Exit'*.
+
+buttons:
+  - Continue: continue
+  - Exit: exit
+    url: https://www.jerseylaw.je/Pages/default.aspx  
+---
+# Code block that drives the app
+# The review_screen in this block is only present for the purposes of showing Mark phase 1, it will likely need to be removed before continuing on to phase 2. 
+mandatory: True
+code: |
+  legislative_instrument
+  amending_instrument
+  commencement_date
+  
+  first_article_amended
+  first_heading_amended
+  first_provision_amended
+  current_task
+  if current_task == 'Adding words':
+    preceding_words 
+    words_added
+    adding_end_screen
+  if current_task == 'Deleting words': 
+    which_words_deleted
+    deletion_end_screen
+  if current_task == 'Substituting words': 
+    which_words_omitted
+    replacement_words
+    substitution_end_screen
+---
+# This block asks for the name of the law being amended.
+question: What is the name of the legislative instrument you are amending?
+subquestion: |
+ 
+  For example, "Companies (Jersey) Law 1991"
+
+fields:
+    - Legislative Instrument:: legislative_instrument
+---
+# This block asks for the name of the order being created.
+question: What is the title of the amending instrument you are producing?
+
+subquestion: |
+  
+  For example, "Companies (Example Amendments) (Jersey) Order 202"  
+
+fields: 
+  - Amending Instrument:: amending_instrument
+---
+# This block asks the user for the commencement date of the amendments. 
+question: What is the commencement date for these amendments? 
+subquestion: |
+    *Please take care to ensure this is entered with correct spelling and capitalisation, as all responses are case-sensitive.*  
+
+fields: 
+  - Commencement Date:: commencement_date 
+---
+# This block displays a screen asking the user the article, heading, and provision they are amending. 
+question: Please provide the article number, heading, and provision number of the section within the ${ legislative_instrument } that you are amending.
+subquestion: |
+  For example, "Article 3, Method of Formation of a Company, Provision (1)"
+  
+  *Please take care to ensure this is entered with correct spelling and capitalisation, as all responses are case-sensitive.*  
+fields: 
+  - Article:: first_article_amended
+  - Heading:: first_heading_amended
+  - Provision:: first_provision_amended
+---
+# This block asks the user whether they are adding, deleting, or substituting words
+question: Which task are you aiming to complete? 
+subquestion: |
+fields: 
+  - Task: current_task 
+    datatype: radio
+    choices: 
+      - Adding words
+      - Deleting words
+      - Substituting words
+---
+# This code block contains an if statement that directs the user to the appropriate screens, depending on whether they're adding, deleting, or substituting words.
+code: |
+  pass
+---
+# This block displays the screen that appears if the user picked "adding words".
+question: What are the words immediately preceding the words you want to add, and the words you are adding?
+fields: 
+  - Preceding words:: preceding_words
+  - Words being added:: words_added
+---
+# This block displays the screen that appears if the user picked "deleting words".
+question: What words are you removing? 
+subquestion: |
+  Please ensure your input is consistent with how the words appear in the legislative instrument. 
+
+fields: 
+  - Words to be removed:: which_words_deleted
+---
+# This block displays the screen that appears if the user picked "substituting words".
+question: You have selected 'Substituting words'
+subquestion: |
+  Which words are you omiting and what words are you inserting in their place? 
+fields: 
+  - Words to be omitted:: which_words_omitted
+  - Words to be inserted:: replacement_words
+---
+# This block displays the final review screen that will appear if the user added words. 
+event: adding_end_screen
+question: Thank you for providing the required information... 
+subquestion: |
+  In Article ${ first_article_amended } "${ first_heading_amended }" provision ${ first_provision_amended } of the ${ legislative_instrument }, you have chosen to add the word/s: 
+  
+  * "${ words_added }"
+  
+  immediately after "${ preceding_words }".  
+  
+  This amending order will come into effect on the date: ${ commencement_date }.
+
+  If you would like to make any changes to your selection, please press the "Back" button at the top left of the screen, to re-enter any information. 
+  
+buttons: 
+  - Restart: restart
+  - Exit: exit
+    url: https://www.jerseylaw.je/Pages/default.aspx  
+---
+# This block displays the final review screen that will appear if the user deleted words. 
+event: deletion_end_screen  
+question: Thank you for providing the required information... 
+subquestion: |
+  In Article ${ first_article_amended } "${ first_heading_amended }" provision ${ first_provision_amended } of the ${ legislative_instrument }, you have chosen to delete the word/s: 
+  
+  * "${ which_words_deleted }" 
+  
+  This amending order will come into effect on the date: ${ commencement_date }.
+
+  If you would like to make any changes to your selection, please press the "Back" button at the top left of the screen, to re-enter any information. 
+  
+buttons: 
+  - Restart: restart
+  - Exit: exit
+    url: https://www.jerseylaw.je/Pages/default.aspx  
+---
+# This block displays the final review screen that will appear if the user substituted words. 
+event: substitution_end_screen  
+question: Thank you for providing the required information... 
+subquestion: |
+  In Article ${ first_article_amended } "${ first_heading_amended }" provision ${ first_provision_amended } of the ${ legislative_instrument }, you have chosen to omit the word/s: 
+  
+  * "${ which_words_omitted }" 
+  
+  and replace them with: 
+  
+  * "${ replacement_words }"
+  
+  This amending order will come into effect on the date: ${ commencement_date }.
+
+  If you would like to make any changes to your selection, please press the "Back" button at the top left of the screen, to re-enter any information. 
+  
+buttons: 
+  - Restart: restart
+  - Exit: exit
+    url: https://www.jerseylaw.je/Pages/default.aspx  
+---
