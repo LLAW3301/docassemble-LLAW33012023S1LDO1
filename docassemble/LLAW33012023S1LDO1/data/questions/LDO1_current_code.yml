@@ -227,11 +227,7 @@ subquestion: |
   
   If you would like to make any changes to your selection, please press the "Back" button at the top left of the screen, to re-enter any information. 
 attachments:
-  - docx template file: LDO1doc.docx
-buttons: 
-  - Restart: restart
-  - Exit: exit
-    url: https://www.jerseylaw.je/Pages/default.aspx  
+  - docx template file: LDO1doc.docx  
 ---
 # We use a separate code block to create the amendment screen. It keeps the final_screen
 # a bit cleaner and easier to read
