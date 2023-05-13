@@ -22,7 +22,7 @@ code: |
   set_parts(logo='<img src="' + JerseyLogo.url_for() + '" style="height: 50px;">')
 ---
 # We use these objects to set up our data structure.  We will have:
-# - a list of articles
+#- a list of articles
 # - in each article, a list of amendments; and
 # - in each amendment a list of amendment instructions
 objects:
@@ -64,7 +64,7 @@ subquestion: |
 fields:
     - Legislative Instrument:: legislative_instrument
 ---
-# This block asks for the name of the order being created.
+# This block asks for the name of the amending order being created.
 question: What is the title of the amending instrument you are producing?
 
 subquestion: |
@@ -95,8 +95,7 @@ fields:
   - Heading:: articles[i].article_heading
   - Provision:: articles[i].article_provision
 ---
-# We ask for amendments in two phases.  First ask what type of amendment and then second ask for the amendment details.
-# We do this so we can construct the appropriate labels for the amendment details
+# We ask for amendments in two phases. Firstly, we ask for the type of amendment, and then we ask for the amendment details. This allows us to construct appropriate labels for the amendment details.
 question: Which task are you aiming to complete? 
 subquestion: |
 fields:
@@ -107,10 +106,8 @@ fields:
       - Deleting words
       - Substituting words
 ---
-# Question block for amendment details. We need to use sets as we generate the fields dynamically.  See https://docassemble.org/docs/fields.html#fields%20code.
-# I got very fancy here.  It's so I can use one question block for adding, deleting and
-# substituting even though when I delete I only need one instruction and for the others I need two. A bit of overkill - sorry!
-# This question block and the two code blocks that follow it are related, so I've kept them together.
+# Question block for amendment details. We need to use sets as we generate the fields dynamically. There is one question block for adding, deleting and substituting. 
+# This question block and the two code blocks that follow are related, so I've kept them together.
 sets: articles[i].amendments[j].instructions[0].instruction
 question: Enter amendment details
 subquestion: |
@@ -146,9 +143,7 @@ code: |
 
   articles[i].amendments[j].instructions.gathered = True
 ---
-# This code block constructs the fields to display for the amendment.  We do this
-# in a code block so that we can display one instruction field for a deletion and two
-# fields for an addition or substitution
+# This code block constructs the fields to display for the amendment.  We do this in a code block so that we can display one instruction field for a deletion and two fields for an addition or substitution.
 code: |
   at = articles[i].amendments[j].amendment_type
   
@@ -172,17 +167,8 @@ code: |
 
   articles[i].amendments[j].field_codes = field_code
 ---
-# These next four code blocks drive the process of asking for articles and for amendments for
-# each article.  We can have many articles and each article can have many amendments.  Docassemble
-# has a feature called 'Groups' and we are making extensive use of this feature! Check out these
-# parts of the manual for more info:
-# - https://docassemble.org/docs/groups.html#list%20of%20objects
-# - https://docassemble.org/docs/groups.html#nested%20lists
-# 
-# This code block asks for the article details and then collects the amedments for that
-# article.
-# Note we only ask for the article_number.  That's because this is enough to call the question
-# block which contains the other two article_xxx variables.
+# These next four code blocks drive the process of asking for articles and asking for amendments in each article.  We can have many articles and each article can have many amendments.  Docassemble has a feature called 'Groups' and we are making extensive use of this feature! 
+# This code block asks for the article details and then collects the amendments for that article. Note we only ask for the article_number.  That's because this is enough to call the question.
 code: |
   # Asks for the article detail and then
   # the list of amendments and then marks
@@ -191,36 +177,32 @@ code: |
   articles[i].amendments.gather()
   articles[i].complete = True
 ---
-# This code block drives the collection of the amendments.  Note we ask for the type
-# first and then instruction_1.
+# This code block drives the collection of the amendments.  Note we ask for the type first, and then instruction_1.
 code: |
   articles[i].amendments[j].amendment_type
   articles[i].amendments[j].instructions[0].instruction
   articles[i].amendments[j].complete = True
 ---
-# Asks whether to add amendments to another provision.
+# Asks the user whether they want to add amendments to another provision.
 question: Would you like to make changes to another provision?
 yesno: articles.there_is_another
 ---
-# Asks whether to make another amendment to the same provision.
+# Asks the user whether to make another amendment to the same provision.
 question: Would you like to make another amendment within this provision?
 yesno: articles[i].amendments.there_is_another
 ---
-# This is the final screen.  In this example I use a two nested for loops
-# in the subquestion to generate the list of articles and the list of the amendments 
-# for each article. 
-# We use a code block (underneath this event) to display the amendments beautifully
+# This is the final screen. In this example I use two nested for loops in the subquestion to generate the list of articles and the list of the amendments for each article.  We use a code block (underneath this event) to display the amendments beautifully
 event: final_screen
 question: Please review the following amendments... 
 subquestion: |
 
   % for article in articles:
-  ### Article ${article.article_number} "${article.article_heading }" provision ${article.article_provision}: 
-  
+  **Article ${article.article_number} "${article.article_heading }" provision ${article.article_provision}:** 
   
   % for amendment in article.amendments:
   * ${amendment.amendment_string }
   % endfor
+  
   % endfor
   
   This amending order will come into effect on the date: **${ commencement_date }**.
@@ -228,16 +210,20 @@ subquestion: |
   If you would like to make any changes to your selection, please press the "Back" button at the top left of the screen, to re-enter any information. 
 attachments:
   - docx template file: LDO1doc.docx  
+
+buttons: 
+  - Restart: restart
+  - Exit: exit 
+    url: https://www.jerseylaw.je/Pages/default.aspx
 ---
-# We use a separate code block to create the amendment screen. It keeps the final_screen
-# a bit cleaner and easier to read
+# We use a separate code block to create the amendment screen. It keeps the final_screen a bit cleaner and easier to read. The wording used below in the if statement uses the Legislative Drafting Office's standard amending language. 
 code: |
   # Variables to make the code a bit less cluttered
   at = articles[i].amendments[j].amendment_type
   instr0 = articles[i].amendments[j].instructions[0].instruction
   if defined('articles[i].amendments[j].instructions[1].instruction'):
     instr1 = articles[i].amendments[j].instructions[1].instruction
-  
+
   if at == 'Adding words':
     display_string = 'after "{}", there is inserted "{}".'.format(instr0, instr1)
   elif at == 'Deleting words':
