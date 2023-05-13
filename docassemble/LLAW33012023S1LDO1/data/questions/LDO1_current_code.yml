@@ -239,11 +239,11 @@ code: |
     instr1 = articles[i].amendments[j].instructions[1].instruction
   
   if at == 'Adding words':
-    display_string = 'After "{}", there is inserted "{}".'.format(instr1, instr0)
+    display_string = 'after "{}", there is inserted "{}".'.format(instr0, instr1)
   elif at == 'Deleting words':
     display_string = '"{}" is deleted.'.format(instr0)
   elif at == 'Substituting words':
-    display_string = 'For "{}", there is substituted "{}".'.format(
+    display_string = 'for "{}", there is substituted "{}".'.format(
                                                                                 instr0, instr1)
   articles[i].amendments[j].amendment_string = display_string
 ---
