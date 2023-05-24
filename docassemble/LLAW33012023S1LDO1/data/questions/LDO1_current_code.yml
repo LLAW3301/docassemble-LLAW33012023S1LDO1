@@ -209,7 +209,7 @@ question: Please review the following amendments...
 subquestion: |
 
   % for article in articles:
-  **Article ${article.article_number} "${article.article_heading }" provision ${article.article_provision}:** 
+  **Article ${article.article_number} "${article.article_heading }" provision EEk!!:** 
   
   % for amendment in article.amendments:
   * ${amendment.amendment_string }

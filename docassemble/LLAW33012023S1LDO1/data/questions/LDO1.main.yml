@@ -141,70 +141,9 @@ fields:
     show if:
       variable: articles[i].amendments[j].amendment_type
       is: 'Substituting words'
-list collect: True
-label: |
-  Amendment ${ i + 1}
----
-# Question block for amendment details. We need to use sets as we generate the fields dynamically. There is one question block for adding, deleting and substituting. 
-# This question block and the two code blocks that follow are related, so I've kept them together.
-sets: articles[i].amendments[j].instructions[0].instruction
-question: Enter amendment details
-subquestion: |
-
-  % if articles[i].amendments[j].amendment_type == 'Adding words':
-  Words are added by inserting them after other words. You need to give these preceding words as well as the words to be added. They will be put together to make the amending phrase ‘after X there is inserted Y’.
-  %elif articles[i].amendments[j].amendment_type == 'Deleting words': 
-  What words would you like to delete? 
-  %elif articles[i].amendments[j].amendment_type == 'Substituting words': 
-  What words are you ommitting and what words are you replacing them with?
-  %endif
-
-fields:
-  code: articles[i].amendments[j].field_codes
----
-# This code block sets the instruction labels depending on the amendment instruction
-code: |
-  # Store amendment_type here to save on typing
-  at = articles[i].amendments[j].amendment_type
-
-  # The values for at must match exactly the choices for amendment_type
-  if at == 'Adding words':
-    articles[i].amendments[j].instructions[0].label = 'Preceding words'
-    articles[i].amendments[j].instructions[1].label = 'Words to be added'
-  elif at == 'Deleting words':
-    articles[i].amendments[j].instructions[0].label = 'Words to be deleted'
-  elif at == 'Substituting words':
-    articles[i].amendments[j].instructions[0].label = 'Words to be omitted'
-    articles[i].amendments[j].instructions[1].label = 'Words to be inserted'
-  else:
-    articles[i].amendments[j].instructions[0].label = 'ERROR: Invalid amendment_type: {}'.format(at)
-    articles[i].amendments[j].instructions[1].label = 'ERROR: Invalid amendment_type: {}'.format(at)
-
-  articles[i].amendments[j].instructions.gathered = True
----
-# This code block constructs the fields to display for the amendment.  We do this in a code block so that we can display one instruction field for a deletion and two fields for an addition or substitution.
-code: |
-  at = articles[i].amendments[j].amendment_type
-  
-  # We define these strings to make the code below less cluttered
-  instr0       = 'articles[i].amendments[j].instructions[0].instruction'
-  instr1       = 'articles[i].amendments[j].instructions[1].instruction'
-  instr0_label = '${articles[i].amendments[j].instructions[0].label}'
-  instr1_label = '${articles[i].amendments[j].instructions[1].label}'
-  error_label  = 'ERROR: Invalid argument type: ' + at
-  
-  if at == 'Adding words' or at == 'Substituting words':
-    field_code = [
-      { instr0_label : instr0 },
-      { instr1_label : instr1 }]
-  elif at == 'Deleting words':
-    field_code = [
-      { instr0_label : instr0 }]
-  else:
-    field_code = [
-      { error_label : instr0 }]
-
-  articles[i].amendments[j].field_codes = field_code
+list collect:
+  enable: not articles[i].amendments.has_been_gathered()
+  is final: False
 ---
 # These next four code blocks drive the process of asking for articles and asking for amendments in each article.  We can have many articles and each article can have many amendments.  Docassemble has a feature called 'Groups' and we are making extensive use of this feature! 
 # This code block asks for the article details and then collects the amendments for that article. Note we only ask for the article_number.  That's because this is enough to call the question.
@@ -218,7 +157,6 @@ code: |
 ---
 # This code block drives the collection of the amendments.  Note we ask for the type first, and then instruction_1.
 code: |
-  articles[i].amendments[j].amendment_type
   articles[i].amendments[j].instructions[0].instruction
   articles[i].amendments[j].complete = True
 ---
@@ -236,10 +174,10 @@ question: Please review the following amendments...
 subquestion: |
 
   % for article in articles:
-  **Article ${article.article_number} "${article.article_heading }" provision ${article.article_provision}:** 
+  **Article ${article.article_number} "${article.article_heading }" provision ${article}:** 
   
   % for amendment in article.amendments:
-  * ${amendment.amendment_string }
+  * ${amendment.amendment_string}
   % endfor
   
   % endfor
@@ -247,12 +185,6 @@ subquestion: |
   This amending order will come into effect on the date: **${ commencement_date }**.
   
   If you would like to make any changes to your selection, please press the "Back" button at the top left of the screen, to re-enter any information. 
-attachments:
-  - docx template file: LDO1doc.docx  
-    name: AOT Generated File
-    filename: Amending_Order_Tool_File.docx
-    valid formats: 
-      - docx
 
 buttons: 
   - Restart: restart
@@ -264,15 +196,16 @@ code: |
   # Variables to make the code a bit less cluttered
   at = articles[i].amendments[j].amendment_type
   instr0 = articles[i].amendments[j].instructions[0].instruction
+  prov = articles[i].amendments[j].article_provision
   if defined('articles[i].amendments[j].instructions[1].instruction'):
     instr1 = articles[i].amendments[j].instructions[1].instruction
 
+  provision_text = 'In provision "{}"'.format(prov)
   if at == 'Adding words':
     display_string = 'after "{}" there is inserted "{}".'.format(instr0, instr1)
   elif at == 'Deleting words':
     display_string = '"{}" is deleted.'.format(instr0)
   elif at == 'Substituting words':
-    display_string = 'for "{}" there is substituted "{}".'.format(
-                                                                                instr0, instr1)
-  articles[i].amendments[j].amendment_string = display_string
+    display_string = 'for "{}" there is substituted "{}".'.format(instr0, instr1)
+  articles[i].amendments[j].amendment_string = '{} {}'.format(provision_text, display_string)
 ---
