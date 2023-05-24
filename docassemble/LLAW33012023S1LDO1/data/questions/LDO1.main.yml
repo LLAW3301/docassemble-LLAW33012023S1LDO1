@@ -1,0 +1,278 @@
+---
+# This block sets the title and short title of the app.
+metadata:
+  title: |
+    LDO Amending Order Tool
+  short title: |
+    Amending Orders Tool
+---
+# This block includes the Static File "navbarfile.css" in our code, which allows us to personalise the app's colours and appearance. The file can be found in the 'Static Files' folder in the docassemble playground. 
+features:
+  css: navbarfile.css
+  debug: True
+  hide standard menu: False
+---
+# This block declares The Jersey Government's logo as an object, which is required to display the logo in the navbar. This image file is in the 'Static' folder in the Playground.
+objects:
+  - JerseyLogo: DAStaticFile.using(filename='NavbarLogo.PNG')
+---
+# This block displays the aforementioned logo in the navbar.
+mandatory: True
+code: |
+  set_parts(logo='<img src="' + JerseyLogo.url_for() + '" style="height: 50px;">')
+---
+# We use these objects to set up our data structure.  We will have:
+#- a list of articles
+# - in each article, a list of amendments; and
+# - in each amendment a list of amendment instructions
+objects:
+  - articles: DAList.using(there_are_any=True, object_type=DAObject, complete_attribute='complete')
+  - articles[i].amendments: DAList.using(there_are_any=True, object_type=DAObject, complete_attribute='complete')
+  - articles[i].amendments[j].instructions: DAList.using(there_are_any=True, object_type=DAObject, auto_gather=False)
+---
+# This block displays the welcome page for the app.
+mandatory: True
+question: Welcome to the Amending Order Tool
+subquestion: |
+  [FILE AmendingOrderToolFirstLogo.PNG]
+  
+  This app creates the amending language for amending orders.
+  
+  This app only prepares textual amendments – the simple insertion, deletion or substitution of text. It cannot be used for provision-level amendments.
+  
+  Please take care to ensure all fields are entered with correct spelling and capitalisation, because all text is used to create the draft amendments and must be correct.  
+  
+  To continue, press *'Continue'*, to exit, press *'Exit'*.
+
+buttons:
+  - Continue: continue
+  - Exit: exit
+    url: https://www.jerseylaw.je/Pages/default.aspx  
+---
+# Mandatory code block that drives the app
+mandatory: True
+code: |
+  legislative_instrument 
+  amending_instrument
+  commencement_date
+  final_screen
+---
+# This block asks for the name of the law being amended.
+question: What is the name of the instrument you are amending?
+subquestion: |
+ 
+  For example, "Companies (Jersey) Law 1991"
+
+fields:
+    - Instrument title:: legislative_instrument
+      input type: area
+      rows: 6
+---
+# This block asks for the name of the amending order being created.
+question: What is the title of the draft amending instrument?
+
+subquestion: |
+  
+  For example, "Companies (Example Amendments) (Jersey) Order 202-"  
+
+fields: 
+  - Amending instrument title:: amending_instrument
+    input type: area
+    rows: 6
+    
+---
+# This block asks the user for the commencement date of the amendments. 
+question: What is the commencement date for these amendments? 
+subquestion: |
+    For example, '7 days after it is made' or 'on 30th September 2023'
+
+fields: 
+  - Order comes into force:: commencement_date 
+    hint: e.g., 7 days after it is made
+    input type: area
+---
+# This question block asks for the details of the article being amended.
+question: Enter the details of the Article and Heading that you are amending.
+subquestion: |
+
+  For example, "3, Method of formation of a company"
+  
+fields:
+  - Article number:: articles[i].article_number
+    hint: e.g., 3, 15A etc.
+  - Article heading:: articles[i].article_heading
+    hint: e.g., Method of formation of a company    
+---
+# We ask for amendments in two phases. Firstly, we ask for the type of amendment, and then we ask for the amendment details. This allows us to construct appropriate labels for the amendment details.
+question: What is the provision that you are amending and the amendment that you are doing? 
+subquestion: |
+fields:
+  - Provision: articles[i].amendments[j].article_provision
+    hint: e.g., (2), (1)(b), (d)(iv) etc.
+  - Amendment type: articles[i].amendments[j].amendment_type
+    datatype: radio
+    choices:
+      - Adding words
+      - Deleting words
+      - Substituting words
+  - Preceding words: articles[i].amendments[j].instructions[0].instruction
+    show if:
+      variable: articles[i].amendments[j].amendment_type
+      is: 'Adding words'
+    help: |
+      Words are added by inserting them after other words. You need to give these preceding words as well as the words to be added. They will be put together to make the amending phrase ‘after X there is inserted Y’.
+  - Words to be added: articles[i].amendments[j].instructions[1].instruction
+    show if:
+      variable: articles[i].amendments[j].amendment_type
+      is: 'Adding words'
+  - Words to be deleted: articles[i].amendments[j].instructions[0].instruction
+    show if:
+      variable: articles[i].amendments[j].amendment_type
+      is: 'Deleting words'
+    help: |
+      You need to give the words you are removing from the provision. They will be used to make the amendment phrase 'X is deleted'
+  - Words to be omitted: articles[i].amendments[j].instructions[0].instruction
+    show if:
+      variable: articles[i].amendments[j].amendment_type
+      is: 'Substituting words'
+    help: |
+      Words are substituted by omitting words and inserting other words in their place. You need to give these omitted words and the words that you will be replacing them with. They will be put together to make the amendment phrase 'For X there is substituted Y'.
+  - Words to be inserted: articles[i].amendments[j].instructions[1].instruction
+    show if:
+      variable: articles[i].amendments[j].amendment_type
+      is: 'Substituting words'
+list collect: True
+label: |
+  Amendment ${ i + 1}
+---
+# Question block for amendment details. We need to use sets as we generate the fields dynamically. There is one question block for adding, deleting and substituting. 
+# This question block and the two code blocks that follow are related, so I've kept them together.
+sets: articles[i].amendments[j].instructions[0].instruction
+question: Enter amendment details
+subquestion: |
+
+  % if articles[i].amendments[j].amendment_type == 'Adding words':
+  Words are added by inserting them after other words. You need to give these preceding words as well as the words to be added. They will be put together to make the amending phrase ‘after X there is inserted Y’.
+  %elif articles[i].amendments[j].amendment_type == 'Deleting words': 
+  What words would you like to delete? 
+  %elif articles[i].amendments[j].amendment_type == 'Substituting words': 
+  What words are you ommitting and what words are you replacing them with?
+  %endif
+
+fields:
+  code: articles[i].amendments[j].field_codes
+---
+# This code block sets the instruction labels depending on the amendment instruction
+code: |
+  # Store amendment_type here to save on typing
+  at = articles[i].amendments[j].amendment_type
+
+  # The values for at must match exactly the choices for amendment_type
+  if at == 'Adding words':
+    articles[i].amendments[j].instructions[0].label = 'Preceding words'
+    articles[i].amendments[j].instructions[1].label = 'Words to be added'
+  elif at == 'Deleting words':
+    articles[i].amendments[j].instructions[0].label = 'Words to be deleted'
+  elif at == 'Substituting words':
+    articles[i].amendments[j].instructions[0].label = 'Words to be omitted'
+    articles[i].amendments[j].instructions[1].label = 'Words to be inserted'
+  else:
+    articles[i].amendments[j].instructions[0].label = 'ERROR: Invalid amendment_type: {}'.format(at)
+    articles[i].amendments[j].instructions[1].label = 'ERROR: Invalid amendment_type: {}'.format(at)
+
+  articles[i].amendments[j].instructions.gathered = True
+---
+# This code block constructs the fields to display for the amendment.  We do this in a code block so that we can display one instruction field for a deletion and two fields for an addition or substitution.
+code: |
+  at = articles[i].amendments[j].amendment_type
+  
+  # We define these strings to make the code below less cluttered
+  instr0       = 'articles[i].amendments[j].instructions[0].instruction'
+  instr1       = 'articles[i].amendments[j].instructions[1].instruction'
+  instr0_label = '${articles[i].amendments[j].instructions[0].label}'
+  instr1_label = '${articles[i].amendments[j].instructions[1].label}'
+  error_label  = 'ERROR: Invalid argument type: ' + at
+  
+  if at == 'Adding words' or at == 'Substituting words':
+    field_code = [
+      { instr0_label : instr0 },
+      { instr1_label : instr1 }]
+  elif at == 'Deleting words':
+    field_code = [
+      { instr0_label : instr0 }]
+  else:
+    field_code = [
+      { error_label : instr0 }]
+
+  articles[i].amendments[j].field_codes = field_code
+---
+# These next four code blocks drive the process of asking for articles and asking for amendments in each article.  We can have many articles and each article can have many amendments.  Docassemble has a feature called 'Groups' and we are making extensive use of this feature! 
+# This code block asks for the article details and then collects the amendments for that article. Note we only ask for the article_number.  That's because this is enough to call the question.
+code: |
+  # Asks for the article detail and then
+  # the list of amendments and then marks
+  # this article as complete.
+  articles[i].article_number
+  articles[i].amendments.gather()
+  articles[i].complete = True
+---
+# This code block drives the collection of the amendments.  Note we ask for the type first, and then instruction_1.
+code: |
+  articles[i].amendments[j].amendment_type
+  articles[i].amendments[j].instructions[0].instruction
+  articles[i].amendments[j].complete = True
+---
+# Asks the user whether they want to add amendments to another provision.
+question: Would you like to amend another Article?
+yesno: articles.there_is_another
+---
+# Asks the user whether to make another amendment to the same provision.
+question: Would you like to make another amendment to this Article?
+yesno: articles[i].amendments.there_is_another
+---
+# This is the final screen. In this example I use two nested for loops in the subquestion to generate the list of articles and the list of the amendments for each article.  We use a code block (underneath this event) to display the amendments beautifully
+event: final_screen
+question: Please review the following amendments... 
+subquestion: |
+
+  % for article in articles:
+  **Article ${article.article_number} "${article.article_heading }" provision ${article.article_provision}:** 
+  
+  % for amendment in article.amendments:
+  * ${amendment.amendment_string }
+  % endfor
+  
+  % endfor
+  
+  This amending order will come into effect on the date: **${ commencement_date }**.
+  
+  If you would like to make any changes to your selection, please press the "Back" button at the top left of the screen, to re-enter any information. 
+attachments:
+  - docx template file: LDO1doc.docx  
+    name: AOT Generated File
+    filename: Amending_Order_Tool_File.docx
+    valid formats: 
+      - docx
+
+buttons: 
+  - Restart: restart
+  - Exit: exit 
+    url: https://www.jerseylaw.je/Pages/default.aspx
+---
+# We use a separate code block to create the amendment screen. It keeps the final_screen a bit cleaner and easier to read. The wording used below in the if statement uses the Legislative Drafting Office's standard amending language. 
+code: |
+  # Variables to make the code a bit less cluttered
+  at = articles[i].amendments[j].amendment_type
+  instr0 = articles[i].amendments[j].instructions[0].instruction
+  if defined('articles[i].amendments[j].instructions[1].instruction'):
+    instr1 = articles[i].amendments[j].instructions[1].instruction
+
+  if at == 'Adding words':
+    display_string = 'after "{}" there is inserted "{}".'.format(instr0, instr1)
+  elif at == 'Deleting words':
+    display_string = '"{}" is deleted.'.format(instr0)
+  elif at == 'Substituting words':
+    display_string = 'for "{}" there is substituted "{}".'.format(
+                                                                                instr0, instr1)
+  articles[i].amendments[j].amendment_string = display_string
+---
