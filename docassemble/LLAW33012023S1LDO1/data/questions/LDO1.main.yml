@@ -28,7 +28,6 @@ code: |
 objects:
   - articles: DAList.using(there_are_any=True, object_type=DAObject, complete_attribute='complete')
   - articles[i].amendments: DAList.using(there_are_any=True, object_type=DAObject, complete_attribute='complete')
-  - articles[i].amendments[j].instructions: DAList.using(there_are_any=True, object_type=DAObject, auto_gather=False)
 ---
 # This block displays the welcome page for the app.
 mandatory: True
@@ -115,35 +114,35 @@ fields:
       - Adding words
       - Deleting words
       - Substituting words
-  - Preceding words: articles[i].amendments[j].instructions[0].instruction
+  - Preceding words: articles[i].amendments[j].instruction0
     show if:
       variable: articles[i].amendments[j].amendment_type
       is: 'Adding words'
     help: |
       Words are added by inserting them after other words. You need to give these preceding words as well as the words to be added. They will be put together to make the amending phrase ‘after X there is inserted Y’.
-  - Words to be added: articles[i].amendments[j].instructions[1].instruction
+  - Words to be added: articles[i].amendments[j].instruction1
     show if:
       variable: articles[i].amendments[j].amendment_type
       is: 'Adding words'
-  - Words to be deleted: articles[i].amendments[j].instructions[0].instruction
+  - Words to be deleted: articles[i].amendments[j].instruction0
     show if:
       variable: articles[i].amendments[j].amendment_type
       is: 'Deleting words'
     help: |
       You need to give the words you are removing from the provision. They will be used to make the amendment phrase 'X is deleted'
-  - Words to be omitted: articles[i].amendments[j].instructions[0].instruction
+  - Words to be omitted: articles[i].amendments[j].instruction0
     show if:
       variable: articles[i].amendments[j].amendment_type
       is: 'Substituting words'
     help: |
       Words are substituted by omitting words and inserting other words in their place. You need to give these omitted words and the words that you will be replacing them with. They will be put together to make the amendment phrase 'For X there is substituted Y'.
-  - Words to be inserted: articles[i].amendments[j].instructions[1].instruction
+  - Words to be inserted: articles[i].amendments[j].instruction1
     show if:
       variable: articles[i].amendments[j].amendment_type
       is: 'Substituting words'
 list collect:
   enable: not articles[i].amendments.has_been_gathered()
-  is final: False
+  is final: True
 ---
 # These next four code blocks drive the process of asking for articles and asking for amendments in each article.  We can have many articles and each article can have many amendments.  Docassemble has a feature called 'Groups' and we are making extensive use of this feature! 
 # This code block asks for the article details and then collects the amendments for that article. Note we only ask for the article_number.  That's because this is enough to call the question.
@@ -157,7 +156,7 @@ code: |
 ---
 # This code block drives the collection of the amendments.  Note we ask for the type first, and then instruction_1.
 code: |
-  articles[i].amendments[j].instructions[0].instruction
+  articles[i].amendments[j].instruction0
   articles[i].amendments[j].complete = True
 ---
 # Asks the user whether they want to add amendments to another provision.
@@ -195,10 +194,10 @@ buttons:
 code: |
   # Variables to make the code a bit less cluttered
   at = articles[i].amendments[j].amendment_type
-  instr0 = articles[i].amendments[j].instructions[0].instruction
+  instr0 = articles[i].amendments[j].instruction0
   prov = articles[i].amendments[j].article_provision
-  if defined('articles[i].amendments[j].instructions[1].instruction'):
-    instr1 = articles[i].amendments[j].instructions[1].instruction
+  if defined('articles[i].amendments[j].instruction1'):
+    instr1 = articles[i].amendments[j].instruction1
 
   provision_text = 'In provision "{}"'.format(prov)
   if at == 'Adding words':
