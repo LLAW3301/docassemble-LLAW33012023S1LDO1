@@ -46,7 +46,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
 setup(name='docassemble.LLAW33012023S1LDO1',
       version='0.0.1',
       description=('A docassemble extension.'),
-      long_description='# docassemble.LLAW33012023S1LDO1\r\n\r\nA docassemble extension.\r\n\r\n## Author\r\n\r\nIsabella Trigwell, trig0040@flinders.edu.au\r\n\r\n',
+      long_description="# The Amending Order Tool\r\n\r\nThe Amending Order Tool was created by Flinders University Students in collaboration with the Legislative Drafting Office of Jersey, to assist their drafters with creating 'Amending Orders' - the official documents that codify amendments to legislation.\r\n\r\n## Key Features\r\n\r\n* Utilises the Legislative Drafting Office's standard amending language to prepare textual amendments to existing legislation, including the simple insertion, deletion or substitution of text. \r\n* Generates Amending Orders that adhere to the legal formatting required by the Government of Jersey, and contain the amendments entered by the user. \r\n* Minimises the occurrence of human error and inconsistencies within Amending Orders.\r\n* Reduces the time required to draft Amending Orders. \r\n\r\n## Authors\r\nIsabella Trigwell\r\nJames Tsiounamis\r\nSophia Zachos\r\nSumedha Mujamadar \r\n\r\n",
       long_description_content_type='text/markdown',
       author='Isabella Trigwell',
       author_email='trig0040@flinders.edu.au',

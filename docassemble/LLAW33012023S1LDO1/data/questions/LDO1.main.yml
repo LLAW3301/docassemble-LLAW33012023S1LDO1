@@ -28,7 +28,7 @@ default screen parts:
 # This block includes the Static File "navbarfile.css" in our code, which allows us to personalise the app's colours and appearance. The file can be found in the 'Static Files' folder in the docassemble playground. 
 features:
   css: navbarfile.css
-  debug: True
+  debug: False
   hide standard menu: True
 ---
 # This block declares The Jersey Government's logo as an object, which is required to display the logo in the navbar. This image file is in the 'Static' folder in the Playground.
