@@ -1,5 +1,5 @@
 ---
-# This block sets the title and short title of the app.
+# This block sets the title and short title of the app, and lists the authors.
 metadata:
   title: |
     LDO Amending Order Tool
@@ -40,10 +40,7 @@ mandatory: True
 code: |
   set_parts(logo='<img src="' + JerseyLogo.url_for() + '" style="height: 50px;">')
 ---
-# We use these objects to set up our data structure.  We will have:
-#- a list of articles
-# - in each article, a list of amendments; and
-# - in each amendment a list of amendment instructions
+# This block declares objects that will form our data structure. There is a list of articles, and in each article, a list of amendments. 
 objects:
   - articles: DAList.using(there_are_any=True, object_type=DAObject, complete_attribute='complete')
   - articles[i].amendments: DAList.using(there_are_any=True, object_type=DAObject, complete_attribute='complete')
@@ -66,8 +63,10 @@ buttons:
   - Continue: continue
   - Exit: exit
     url: https://www.jerseylaw.je/Pages/default.aspx  
+    
+# Here, the exit button takes the user to Jersey's Legal Information Board website, which where Laws and Orders are publishsed for the public to see,  a neutral place for the drafters to go, 
 ---
-# Mandatory code block that drives the app
+# Mandatory code block that drives the app. After the initial questions are asked, the rest of the screens are called upon by variables declared in the final screen. 
 mandatory: True
 code: |
   legislative_instrument 
@@ -75,7 +74,7 @@ code: |
   commencement_date
   final_screen
 ---
-# This block asks for the name of the law being amended.
+# This block asks for the name of the law being amended. The input type needed to be a full text box rather than a smaller text field, because the names of amending instruments can be very long. 
 question: What is the name of the instrument you are amending?
 subquestion: |
  
@@ -88,7 +87,7 @@ fields:
       default: |
         Companies (Jersey) Law 1991
 ---
-# This block asks for the name of the amending order being created.
+# This block asks for the name of the Amending Order being created. Similarly to the previous block, the input type needed to be a text box due to the length of Amending Order titles. 
 question: What is the title of the draft amending instrument?
 
 subquestion: |
@@ -102,10 +101,10 @@ fields:
     default: |
       Companies (Example Amendments) (Jersey) Order 2023
 ---
-# This block asks the user for the commencement date of the amendments. 
+# This block asks the user for the commencement date of the amendments. The input type is a text box rather than the datatype being 'date', because the commencement date may sometimes be written as a date, and at other times may be written as "X days after it is made".
 question: What is the commencement date for these amendments? 
 subquestion: |
-    For example, '7 days after it is made' or '30th September 2023'
+    For example, '7 days after it is made' or 'on the 30th September 2023'
 
 fields: 
   - Order comes into force: commencement_date 
@@ -114,7 +113,7 @@ fields:
     default: |
       7 days after it is made
 ---
-# This question block asks for the details of the article being amended.
+# This question block asks for the details of the Article and Heading that are being amended.
 question: Enter the details of the Article and Heading that you are amending.
 subquestion: |
 
@@ -124,20 +123,24 @@ fields:
   - Article number: articles[i].article_number
     hint: e.g., 3, 15A etc.
     default: |
-      3
+      2
   - Article heading: articles[i].article_heading
     hint: e.g., Method of formation of a company
     default: |
-      Method of formation of a company
+      Statement of initial terms of employment
 ---
-# We ask for amendments in two phases. Firstly, we ask for the type of amendment, and then we ask for the amendment details. This allows us to construct appropriate labels for the amendment details.
+# This block creates the amendment screen. When the user wants to make an amendment, they are firstly asked which provision they are amending, followed by what type of amendment they are creating. Depending on whether they are adding, substituting or deleting words, certain fields will appear to capture the appropriate amendment instructions. The user will then have the choice to add another amendment on the same screen, or delete an amendment if they choose. 
+# Hints and help features have been used to ensure the user enters the amendment details in the correct format. 
 question: What is the provision that you are amending and the amendment that you are doing? 
 subquestion: |
 fields:
   - Provision: articles[i].amendments[j].article_provision
     hint: e.g., (2), (1)(b), (d)(iv) etc.
+# This help text was added in case the user forgets which Law and Article they were  amending - in the event that there are numerous articles being amended, or if the user leaves the app and returns later to continue where they left off. 
+    help: | 
+      You need to enter a provision within Article ${articles[i].article_number} (${articles[i].article_heading}) in the ${legislative_instrument}.
     default: |
-      (1)
+      (3)
   - Amendment type: articles[i].amendments[j].amendment_type
     datatype: radio
     choices:
@@ -151,13 +154,13 @@ fields:
     help: |
       Words are added by inserting them after other words. You need to give these preceding words as well as the words to be added. They will be put together to make the amending phrase ‘after X there is inserted Y’.
     default: |
-      before these words
+      director of the company
   - Words to be added: articles[i].amendments[j].instruction1
     show if:
       variable: articles[i].amendments[j].amendment_type
       is: 'Adding words'
     default: |
-      add these words
+      or manager of the limited liability company
   - Words to be deleted: articles[i].amendments[j].instruction0
     show if:
       variable: articles[i].amendments[j].amendment_type
@@ -165,7 +168,7 @@ fields:
     help: |
       You need to give the words you are removing from the provision. They will be used to make the amendment phrase 'X is deleted'
     default: |
-      delete these words
+      in respect of a company
   - Words to be omitted: articles[i].amendments[j].instruction0
     show if:
       variable: articles[i].amendments[j].amendment_type
@@ -173,13 +176,13 @@ fields:
     help: |
       Words are substituted by omitting words and inserting other words in their place. You need to give these omitted words and the words that you will be replacing them with. They will be put together to make the amendment phrase 'For X there is substituted Y'.
     default: |
-      omit these words
+      a Jersey company
   - Words to be inserted: articles[i].amendments[j].instruction1
     show if:
       variable: articles[i].amendments[j].amendment_type
       is: 'Substituting words'
     default: |
-      insert these words
+      a limited liability company
 list collect:
   enable: not articles[i].amendments.has_been_gathered()
   is final: True
@@ -187,8 +190,8 @@ list collect:
   label: |
      Amendment ${j + 1}.
 ---
-# These next four code blocks drive the process of asking for articles and asking for amendments in each article.  We can have many articles and each article can have many amendments.  Docassemble has a feature called 'Groups' and we are making extensive use of this feature! 
-# This code block asks for the article details and then collects the amendments for that article. Note we only ask for the article_number.  That's because this is enough to call the question.
+# The next three code blocks drive the process of asking for articles and asking for amendments in each article. There may be many articles and many amendments in each article.
+# This code block asks for the article details and then collects the amendments for that article.
 code: |
   # Asks for the article detail and then
   # the list of amendments and then marks
@@ -197,26 +200,22 @@ code: |
   articles[i].amendments.gather()
   articles[i].complete = True
 ---
-# This code block drives the collection of the amendments.  Note we ask for the type first, and then instruction_1.
+# This code block drives the collection of the amendment instructions.
 code: |
   articles[i].amendments[j].instruction0
   articles[i].amendments[j].complete = True
 ---
-# Asks the user whether they want to add amendments to another provision.
+# This code block asks the user whether they want to add amendments to another Article.
 question: Would you like to amend another Article?
 yesno: articles.there_is_another
 ---
-# Asks the user whether to make another amendment to the same provision.
-question: Would you like to make another amendment to this Article?
-yesno: articles[i].amendments.there_is_another
----
-# This is the final screen. In this example I use two nested for loops in the subquestion to generate the list of articles and the list of the amendments for each article.  We use a code block (underneath this event) to display the amendments beautifully
+# This is the final screen. There are two nested for loops in the subquestion to generate the list of articles and the list of the amendments for each article. The attachment feature is also used to generate the Amending Order document. 
 event: final_screen
 question: Please review the following amendments to the ${legislative_instrument}...
 subquestion: |
 
   % for article in articles:
-  **Article ${article.article_number} (${article.article_heading }) amended.** 
+  **Article ${article.article_number} (${article.article_heading }) amended** 
   
   % for amendment in article.amendments:
   * In Article ${amendment.amendment_string}
@@ -224,7 +223,9 @@ subquestion: |
   
   % endfor
   
-  This amending order will come into effect on the date: **${ commencement_date }**.
+  **Citation and commencement** 
+  
+  * This Order may be cited as the ${amending_instrument} and comes into force **${commencement_date }**.
   
   If you would like to make any changes to your selection, please press the "Back" button at the top left of the screen, to re-enter any information. 
 
@@ -235,12 +236,12 @@ buttons:
     
 attachments:
   - docx template file: LDO1doc.docx  
-    name: AOT Generated File
-    filename: Amending_Order_Tool_File.docx
+    name: Amending Order Tool Generated File
+    filename: AOT_Generated_File.docx
     valid formats: 
       - docx
 ---
-# We use a separate code block to create the amendment screen. It keeps the final_screen a bit cleaner and easier to read. The wording used below in the if statement uses the Legislative Drafting Office's standard amending language. 
+# We use a code block to display the amendments on the final screen using the Legislative Drafting Office's standard amending language. This code block ensures that the amendments follow the required formatting of the Drafting Office. 
 code: |
   # Variables to make the code a bit less cluttered
   at = articles[i].amendments[j].amendment_type
